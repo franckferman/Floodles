@@ -1,0 +1,14 @@
+module: http_flood
+target: http://192.168.1.100/search
+meta:
+  name: HTTP GET stress test
+  author: redteam
+  description: >
+    Layer 7 GET flood with cache busting.
+    Targets expensive search endpoint.
+params:
+  method: GET
+  concurrency: 1000
+  duration: 60
+  cache_bust: true
+  post_size: 1024

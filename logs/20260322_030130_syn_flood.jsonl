@@ -1,0 +1,1 @@
+{"event": "start", "module": "syn_flood", "target": "10.0.2.20", "params": {"port": 80, "threads": 16, "pps": 0, "duration": 60, "spoof": true}, "ts": 1774148490.8960967}

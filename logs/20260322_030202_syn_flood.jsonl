@@ -1,0 +1,2 @@
+{"event": "start", "module": "syn_flood", "target": "10.0.2.20", "params": {"port": 80, "threads": 16, "pps": 0, "duration": 60, "spoof": true}, "ts": 1774148522.9850993}
+{"event": "stop", "summary": {"packets": 37485623, "bytes": 1499424920, "errors": 0, "elapsed_s": 60.37, "avg_pps": 620967.2, "avg_mbps": 198.709, "live_pps": 0.0, "live_mbps": 0.0, "backend": "c_sendmmsg"}, "ts": 1774148583.4121404}

@@ -1,0 +1,2 @@
+# Tell GitHub Linguist not to count the docs site in language stats
+docs/index.html linguist-documentation=true
