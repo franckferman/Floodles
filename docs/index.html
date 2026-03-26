@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floodles — DoS Testing Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root {
+  --amber:  #e8920a;
+  --amber2: #c47a08;
+  --amber3: #8a5506;
+  --gold:   #f5c842;
+  --red:    #d42a2a;
+  --red2:   #a81f1f;
+  --lacquer:#0d0b08;
+  --ink:    #1a1510;
+  --ink2:   #231e18;
+  --ink3:   #2e2720;
+  --steam:  #f5e6c8;
+  --mist:   #b8a88a;
+  --smoke:  #6a5e4e;
+  --dim:    #3a3228;
+  --MN: 'JetBrains Mono', monospace;
+  --BB: 'Bebas Neue', sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--lacquer);
+  color:var(--steam);
+  font-family:var(--MN);
+  font-size:13px;
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:3px;background:var(--lacquer)}
+::-webkit-scrollbar-thumb{background:var(--amber3)}
+.wrap{max-width:1160px;margin:0 auto;padding:0 40px}
+
+/* ANIMATIONS */
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes amber-glow{0%,100%{text-shadow:0 0 8px var(--amber),0 0 24px rgba(232,146,10,.3)}50%{text-shadow:0 0 16px var(--amber),0 0 48px rgba(232,146,10,.5)}}
+@keyframes slide-up{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:rgba(13,11,8,.96);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--dim);
+  height:56px;
+  display:flex;align-items:center;
+}
+.nav-inner{
+  width:100%;max-width:1160px;margin:0 auto;padding:0 40px;
+  display:flex;align-items:center;
+}
+.nav-logo{font-family:var(--BB);font-size:20px;letter-spacing:3px;color:var(--steam);text-decoration:none;margin-right:32px}
+.nav-links{display:flex;list-style:none}
+.nav-links a{
+  font-family:var(--MN);font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--smoke);text-decoration:none;padding:0 18px;height:56px;
+  display:flex;align-items:center;border-right:1px solid var(--dim);
+  transition:color .15s,background .15s;
+}
+.nav-links a:first-child{border-left:1px solid var(--dim)}
+.nav-links a:hover{color:var(--amber);background:rgba(232,146,10,.05)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:16px}
+.nav-version{font-family:var(--MN);font-size:9px;letter-spacing:3px;color:var(--amber);border:1px solid rgba(232,146,10,.25);padding:3px 10px}
+.nav-gh{font-family:var(--MN);font-size:9px;letter-spacing:2px;color:var(--smoke);text-decoration:none;border:1px solid var(--dim);padding:3px 10px;transition:color .15s,border-color .15s}
+.nav-gh:hover{color:var(--steam);border-color:var(--smoke)}
+.nav-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none;margin-left:auto}
+.nav-ham span{display:block;width:22px;height:2px;background:var(--steam);transition:all .2s}
+.nav-ham.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-ham.open span:nth-child(2){opacity:0}
+.nav-ham.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* HERO */
+#hero{min-height:100vh;padding-top:56px;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 60%,rgba(232,146,10,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 30%,rgba(212,42,42,.04) 0%,transparent 50%)}
+.hero-main{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:1;padding:80px 40px;max-width:900px;margin:0 auto;width:100%}
+.hero-title-block{margin-bottom:24px;animation:slide-up .6s ease .2s both}
+.hero-en{font-family:var(--BB);font-size:clamp(72px,11vw,148px);letter-spacing:-2px;line-height:.9;display:block}
+.floo{color:var(--steam)}
+.dles{color:var(--amber);text-shadow:0 0 32px rgba(232,146,10,.35)}
+.hero-desc{font-size:15px;font-weight:300;line-height:1.8;color:var(--mist);max-width:680px;margin-bottom:40px;animation:slide-up .6s ease .3s both}
+.hero-desc strong{color:var(--steam);font-weight:700}
+.hero-desc .am{color:var(--amber);font-weight:700}
+.hero-menu{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--dim);border:1px solid var(--dim);max-width:640px;animation:slide-up .6s ease .4s both}
+.menu-item{background:var(--ink2);padding:16px 18px;transition:background .15s}
+.menu-item:hover{background:var(--ink3)}
+.mi-val{font-family:var(--BB);font-size:40px;color:var(--amber);line-height:1;display:block;text-shadow:0 0 12px rgba(232,146,10,.25)}
+.mi-en{font-family:var(--MN);font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-top:1px}
+
+/* SECTIONS */
+section{padding:96px 0;border-top:1px solid var(--dim)}
+.s-title{font-family:var(--BB);font-size:clamp(36px,5vw,72px);letter-spacing:-1px;line-height:.95;color:var(--steam);margin-bottom:56px}
+.s-title .am{color:var(--amber)}
+
+/* MODULES */
+#modules{background:var(--ink)}
+.mtable-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.mtable{width:100%;border-collapse:collapse;font-size:12px}
+.mtable .mhead{border-bottom:1px solid var(--amber3)}
+.mtable .mhead td{font-family:var(--MN);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);padding:8px 12px 8px 0}
+.mtable .mrow{border-bottom:1px solid var(--dim);transition:background .1s}
+.mtable .mrow:hover{background:rgba(232,146,10,.04)}
+.mtable .mrow td{padding:11px 12px 11px 0;vertical-align:top}
+.mcat{font-family:var(--MN);font-size:11px;color:var(--amber3);letter-spacing:4px;padding:20px 0 6px 0 !important}
+.mcat::before{content:'── '}
+.m-pid{font-family:var(--BB);font-size:22px;letter-spacing:1px;color:var(--amber);width:110px;white-space:nowrap;text-shadow:0 0 8px rgba(232,146,10,.2)}
+.m-name{font-weight:700;color:var(--steam);width:140px;font-size:13px;white-space:nowrap}
+.m-desc{color:var(--smoke);line-height:1.6;max-width:360px}
+.m-layer{font-family:var(--BB);font-size:18px;width:60px;white-space:nowrap}
+.m-root{font-size:9px;letter-spacing:2px;width:80px;white-space:nowrap}
+.m-amp{font-family:var(--BB);font-size:22px;text-align:right;white-space:nowrap}
+.l3{color:var(--mist)}.l4{color:var(--steam)}.l7{color:#6aaa44}.la{color:var(--gold)}
+.rr{color:var(--red)}.rn{color:#6aaa44}
+.amp-v{color:var(--gold);text-shadow:0 0 8px rgba(245,200,66,.35)}
+
+/* PERF */
+#perf{background:var(--lacquer);display:grid;grid-template-columns:1fr 1fr;padding:0;border-top:1px solid var(--dim)}
+.perf-l{padding:96px 48px;border-right:1px solid var(--dim)}
+.perf-r{padding:96px 48px}
+.hbar-row{margin-bottom:22px}
+.hbar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.hbar-label{font-family:var(--MN);font-size:10px;letter-spacing:2px;color:var(--smoke);text-transform:uppercase}
+.hbar-val{font-family:var(--BB);font-size:20px;color:var(--steam);line-height:1}
+.hbar-track{height:4px;background:var(--dim);position:relative;overflow:hidden}
+.hbar-fill{position:absolute;left:0;top:0;bottom:0;transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+.hbar-fill.amber{background:linear-gradient(to right,var(--amber2),var(--amber))}
+.hbar-fill.gold{background:linear-gradient(to right,var(--amber),var(--gold))}
+.hbar-fill.blue{background:#44aacc}
+.hbar-sub{font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:3px}
+.amp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--dim)}
+.amp-tile{background:var(--ink);padding:24px 20px;transition:background .15s;position:relative;overflow:hidden}
+.amp-tile:hover{background:var(--ink2)}
+.amp-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--amber);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.amp-tile:hover::before{transform:scaleX(1)}
+.a-n{font-family:var(--BB);font-size:64px;color:var(--gold);line-height:1;display:block;text-shadow:0 0 20px rgba(245,200,66,.3)}
+.a-proto{font-family:var(--MN);font-size:11px;letter-spacing:3px;color:var(--steam);display:block;margin-top:4px}
+.a-port{font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:4px}
+
+/* INSTALL */
+#install{background:var(--ink)}
+.man-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--dim)}
+.man-card{background:var(--lacquer);padding:32px 28px;position:relative;transition:background .15s}
+.man-card:hover{background:var(--ink2)}
+.man-stamp{position:absolute;top:16px;right:16px;font-family:var(--BB);font-size:28px;color:var(--red);opacity:.4;line-height:1;letter-spacing:2px}
+.man-title{font-family:var(--BB);font-size:20px;letter-spacing:4px;color:var(--amber);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--dim)}
+.term{font-family:var(--MN);font-size:11px;line-height:1.9}
+.tp{color:var(--amber3);user-select:none}.tc{color:var(--steam)}.to{color:var(--smoke)}
+.tg{color:#6aaa44}.td{color:var(--dim)}.tr{color:var(--red)}
+.tcur::after{content:'█';animation:blink 1s step-end infinite;color:var(--amber)}
+
+/* CLI */
+#usage{background:var(--lacquer)}
+.cli-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--dim)}
+.cli-pane{background:var(--ink)}
+.cli-bar{background:var(--ink2);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--dim)}
+.cb-title{font-family:var(--BB);font-size:11px;color:var(--amber);letter-spacing:3px}
+.cb-badge{font-family:var(--MN);font-size:8px;letter-spacing:2px;border:1px solid;padding:2px 6px}
+.badge-r{color:var(--red);border-color:rgba(212,42,42,.35)}
+.badge-g{color:#6aaa44;border-color:rgba(106,170,68,.35)}
+.cli-pane .term{padding:16px}
+
+/* DECISION */
+#decision{background:var(--ink)}
+.dec-layout{display:grid;grid-template-columns:1fr 320px;gap:40px}
+.dtree-wrap{background:var(--lacquer);border:1px solid var(--dim);border-left:3px solid var(--amber);position:relative}
+.dtree-bar{background:var(--ink2);padding:8px 16px;font-family:var(--MN);font-size:11px;color:var(--amber);letter-spacing:3px;border-bottom:1px solid var(--dim)}
+.dtree{padding:24px 28px;font-family:var(--MN);font-size:12px;line-height:2.1}
+.dr{color:var(--steam);font-weight:700}.dp{color:var(--dim)}.dq{color:var(--mist)}.dm{color:var(--amber);font-weight:700}.dn{color:var(--smoke);font-style:italic}
+.rules{display:flex;flex-direction:column;gap:1px;background:var(--dim)}
+.rule{background:var(--lacquer);padding:18px 20px;transition:background .15s}
+.rule:hover{background:var(--ink2)}
+.rule-m{font-family:var(--BB);font-size:22px;letter-spacing:2px;color:var(--amber)}
+.rule-d{font-size:11px;color:var(--smoke);line-height:1.6;margin-top:4px}
+
+/* FOOTER */
+footer{background:var(--ink);padding:0;border-top:1px solid var(--dim)}
+.footer-inner{display:flex;align-items:stretch}
+.f-block{padding:24px 36px;border-right:1px solid var(--dim);display:flex;align-items:center}
+.f-block:last-child{border-right:none;margin-left:auto}
+.f-ver{font-family:var(--MN);font-size:9px;letter-spacing:2px;color:var(--dim);line-height:1.8}
+.f-link{font-family:var(--MN);font-size:9px;letter-spacing:2px;color:var(--smoke);text-decoration:none;transition:color .15s}
+.f-link:hover{color:var(--amber)}
+
+/* RESPONSIVE */
+@media(max-width:1024px){
+  .wrap{padding:0 24px}
+  #perf{grid-template-columns:1fr}
+  .perf-l{border-right:none;border-bottom:1px solid var(--dim);padding:64px 32px}
+  .perf-r{padding:64px 32px}
+  .amp-grid{grid-template-columns:repeat(2,1fr)}
+  .man-grid{grid-template-columns:1fr 1fr}
+  .cli-grid{grid-template-columns:1fr}
+  .dec-layout{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .nav-inner{flex-wrap:wrap}
+  .nav-ham{display:flex}
+  .nav-links{display:none;flex-direction:column;width:100%;background:var(--ink);border-top:1px solid var(--dim);position:absolute;top:56px;left:0;right:0;z-index:200}
+  .nav-links.open{display:flex}
+  .nav-links a{border-right:none;border-bottom:1px solid var(--dim);padding:14px 24px;height:auto}
+  .nav-links a:first-child{border-left:none}
+  .nav-right{display:none}
+  .hero-main{padding:72px 20px 48px}
+  .hero-en{font-size:clamp(56px,18vw,96px)}
+  .hero-menu{grid-template-columns:1fr 1fr}
+  .mi-val{font-size:30px}
+  section{padding:64px 0}
+  .s-title{font-size:clamp(28px,9vw,52px)}
+  .amp-grid{grid-template-columns:1fr 1fr}
+  .man-grid{grid-template-columns:1fr}
+  .footer-inner{flex-direction:column}
+  .f-block{border-right:none;border-bottom:1px solid var(--dim)}
+}
+@media(max-width:420px){
+  .hero-en{font-size:clamp(48px,22vw,76px)}
+  .hero-menu{grid-template-columns:1fr 1fr}
+  .amp-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#hero" class="nav-logo">Floodles</a>
+    <button class="nav-ham" id="nav-ham" aria-label="Menu"><span></span><span></span><span></span></button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#modules">Modules</a></li>
+      <li><a href="#perf">Performance</a></li>
+      <li><a href="#install">Install</a></li>
+      <li><a href="#usage">CLI</a></li>
+      <li><a href="#decision">Guide</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://github.com/franckferman/Floodles" class="nav-gh" target="_blank" rel="noopener">GitHub</a>
+      <span class="nav-version">v2.0.0</span>
+    </div>
+  </div>
+</nav>
+
+<section id="hero" style="padding:0;border:none">
+  <div class="hero-bg"></div>
+  <div class="hero-main">
+    <div>
+      <div class="hero-title-block">
+        <span class="hero-en"><span class="floo">FLOO</span><span class="dles">DLES</span></span>
+      </div>
+      <p class="hero-desc">
+        Modular DoS/DDoS testing toolkit for <strong>authorized security audits</strong>.
+        19 attack vectors across L3/L4/L7. Raw sockets, spoofing, amplification.
+        <span class="am">Python + C + Rust + Go.</span>
+      </p>
+      <div class="hero-menu">
+        <div class="menu-item"><span class="mi-val">19</span><div class="mi-en">Modules</div></div>
+        <div class="menu-item"><span class="mi-val">4</span><div class="mi-en">Languages</div></div>
+        <div class="menu-item"><span class="mi-val">2M+</span><div class="mi-en">Max PPS</div></div>
+        <div class="menu-item"><span class="mi-val">650x</span><div class="mi-en">Max Amp</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="modules">
+  <div class="wrap">
+    <h2 class="s-title">19 <span class="am">MODULES</span></h2>
+    <div class="mtable-wrap">
+    <table class="mtable" cellspacing="0">
+      <tr class="mhead"><td>CODE</td><td>MODULE</td><td>DESCRIPTION</td><td>LAYER</td><td>ROOT</td><td style="text-align:right">AMP</td></tr>
+      <tr class="mrow"><td class="mcat" colspan="6">NETWORK &amp; TRANSPORT — Layer 3/4</td></tr>
+      <tr class="mrow"><td class="m-pid">UFOSYN</td><td class="m-name">syn_flood</td><td class="m-desc">Half-open TCP state exhaustion. Spoofed SYN fills server backlog. Tests SYN cookie activation.</td><td class="m-layer l4">L4</td><td class="m-root rr">ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="m-pid">UFOACK</td><td class="m-name">ack_flood</td><td class="m-desc">Spoofed ACK flood. Generates RST storm. Reveals stateless vs stateful firewall behavior.</td><td class="m-layer l4">L4</td><td class="m-root rr">ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="m-pid">UFORST</td><td class="m-name">rst_flood</td><td class="m-desc">RST/FIN flood. Forceful TCP connection teardown. Variants: R, F, RF.</td><td class="m-layer l4">L4</td><td class="m-root rr">ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="m-pid">XMAS</td><td class="m-name">xmas_flood</td><td class="m-desc">All 8 TCP flags simultaneously. Illegal per RFC 793. IDS detection + stateless ACL bypass test.</td><td class="m-layer l4">L4</td><td class="m-root rr">ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="m-pid">UFOUDP</td><td class="m-name">udp_flood</td><td class="m-desc">Volumetric UDP up to 1400B. Random ports generate ICMP unreachable storm on victim.</td><td class="m-layer l4">L4</td><td class="m-root rr">ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="m-pid">PINGER</td><td class="m-name">icmp_flood</td><td class="m-desc">ICMP echo flood. Server must reply per packet — doubles effective bandwidth.</td><td class="m-layer l3">L3</td><td class="m-root rr">ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="m-pid">TACHYON</td><td class="m-name">tachyon</td><td class="m-desc">SYN-ACK flood. Direct or reflected mode. Reflected: real servers send SYN-ACK to victim from valid IPs.</td><td class="m-layer l4">L4</td><td class="m-root rr">ROOT</td><td class="m-amp">~1x</td></tr>
+      <tr class="mrow"><td class="m-pid">DROPER</td><td class="m-name">ip_frag</td><td class="m-desc">IP fragmentation flood. 8-byte fragments exhaust kernel ipq reassembly buffers. last_only holds 30s.</td><td class="m-layer l3">L3</td><td class="m-root rr">ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="m-pid">OVERLAP</td><td class="m-name">overlap</td><td class="m-desc">Fragment overlap. Teardrop: overlapping offsets crash old kernels. Rose, Tiny variants.</td><td class="m-layer l3">L3</td><td class="m-root rr">ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="mcat" colspan="6">AMPLIFICATION / DRDoS</td></tr>
+      <tr class="mrow"><td class="m-pid">SNIPER</td><td class="m-name">sniper</td><td class="m-desc">SNMP v2c GetBulkRequest. BER-encoded manually. max-repetitions=255 dumps full MIB-II subtree.</td><td class="m-layer la">AMP</td><td class="m-root rr">ROOT</td><td class="m-amp amp-v">~650x</td></tr>
+      <tr class="mrow"><td class="m-pid">MONLIST</td><td class="m-name">ntp_amp</td><td class="m-desc">NTP mode 7 monlist. 8-byte request to 4400-byte response. Widespread on unpatched embedded devices.</td><td class="m-layer la">AMP</td><td class="m-root rr">ROOT</td><td class="m-amp amp-v">~550x</td></tr>
+      <tr class="mrow"><td class="m-pid">SMURF</td><td class="m-name">smurf</td><td class="m-desc">ICMP echo to subnet broadcast, spoofed as victim. Every host on /24 replies to victim.</td><td class="m-layer la">AMP</td><td class="m-root rr">ROOT</td><td class="m-amp amp-v">~254x</td></tr>
+      <tr class="mrow"><td class="m-pid">FRAGGLE</td><td class="m-name">fraggle</td><td class="m-desc">UDP echo port 7 or chargen port 19 broadcast amplification. Auto-derives broadcast from CIDR.</td><td class="m-layer la">AMP</td><td class="m-root rr">ROOT</td><td class="m-amp amp-v">~254x</td></tr>
+      <tr class="mrow"><td class="m-pid">DNS</td><td class="m-name">dns_amp</td><td class="m-desc">DNS ANY/DNSKEY reflection via open resolvers. Unique random subdomain per packet defeats cache. Accepts @file.txt lists.</td><td class="m-layer la">AMP</td><td class="m-root rr">ROOT</td><td class="m-amp amp-v">~60x</td></tr>
+      <tr class="mrow"><td class="m-pid">SPRAY</td><td class="m-name">spray</td><td class="m-desc">Multi-vector DRDoS coordinator. NTP + DNS + SNMP simultaneously. YAML-configurable.</td><td class="m-layer la">AMP</td><td class="m-root rr">ROOT</td><td class="m-amp" style="color:#d090ff">MULTI</td></tr>
+      <tr class="mrow"><td class="mcat" colspan="6">APPLICATION — Layer 7</td></tr>
+      <tr class="mrow"><td class="m-pid">LOIC L7</td><td class="m-name">http_flood</td><td class="m-desc">Async GET/POST via Go goroutines. Cache-bust, UA rotation. 100k+ concurrent connections.</td><td class="m-layer l7">L7</td><td class="m-root rn">NO ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="m-pid">LORIS</td><td class="m-name">slowloris</td><td class="m-desc">Incomplete HTTP headers. Server waits for CRLF. Drips junk headers every 10s. Auto-refills pool.</td><td class="m-layer l7">L7</td><td class="m-root rn">NO ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="m-pid">RUDY</td><td class="m-name">slow_post</td><td class="m-desc">10MB Content-Length declared, 1 byte/10s body drip. Bypasses header-timeout servers.</td><td class="m-layer l7">L7</td><td class="m-root rn">NO ROOT</td><td class="m-amp">—</td></tr>
+      <tr class="mrow"><td class="m-pid">NUKE</td><td class="m-name">nuke</td><td class="m-desc">TCP connection starvation. Full 3-way handshake, fills ESTABLISHED table. window0 variant.</td><td class="m-layer l7">L4/L7</td><td class="m-root rn">NO ROOT</td><td class="m-amp">—</td></tr>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section id="perf" style="padding:0;border-top:1px solid var(--dim)">
+  <div class="perf-l">
+    <h2 class="s-title" style="margin-bottom:40px">PERFORMANCE</h2>
+    <div class="hbar-row"><div class="hbar-top"><span class="hbar-label">Python + Scapy</span><span class="hbar-val">~12k PPS</span></div><div class="hbar-track"><div class="hbar-fill amber" data-w="1%"></div></div><div class="hbar-sub">1 sendto() per packet — Python GIL ceiling</div></div>
+    <div class="hbar-row"><div class="hbar-top"><span class="hbar-label">C sendmmsg batch=32</span><span class="hbar-val">~310k PPS</span></div><div class="hbar-track"><div class="hbar-fill amber" data-w="15%"></div></div><div class="hbar-sub">3.6x over sendto()</div></div>
+    <div class="hbar-row"><div class="hbar-top"><span class="hbar-label">C sendmmsg batch=128</span><span class="hbar-val">~710k PPS</span></div><div class="hbar-track"><div class="hbar-fill amber" data-w="35%"></div></div><div class="hbar-sub">8.4x — amortized syscall cost</div></div>
+    <div class="hbar-row"><div class="hbar-top"><span class="hbar-label">C sendmmsg batch=256 ★</span><span class="hbar-val" style="color:var(--gold)">~2M PPS</span></div><div class="hbar-track"><div class="hbar-fill gold" data-w="100%"></div></div><div class="hbar-sub">default — NIC-limited on 1 Gbps</div></div>
+    <div class="hbar-row"><div class="hbar-top"><span class="hbar-label">Go HTTP engine</span><span class="hbar-val" style="color:#44aacc">100k+ conns</span></div><div class="hbar-track"><div class="hbar-fill blue" data-w="42%"></div></div><div class="hbar-sub">goroutines M:N — 2KB stack each</div></div>
+    <div style="margin-top:32px;border:1px solid var(--dim);padding:20px;background:var(--ink2)">
+      <div class="term">
+        <div><span class="tp">root@host:~# </span><span class="tc">floodles detect</span></div>
+        <div><span class="tg">[+]</span> <span class="to">C sender    : libsender.so (sendmmsg batch=256)</span></div>
+        <div><span class="tg">[+]</span> <span class="to">Rust packets: libfloodles_packets.so (zero-copy)</span></div>
+        <div><span class="tg">[+]</span> <span class="to">Go engine   : floodles-engine ready</span></div>
+        <div style="color:var(--amber)">[*] All backends active. Maximum performance.</div>
+        <div><span class="tp">root@host:~# </span><span class="tcur"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="perf-r">
+    <h2 class="s-title" style="margin-bottom:32px;color:var(--gold)">AMP</h2>
+    <div class="amp-grid">
+      <div class="amp-tile"><span class="a-n">650x</span><span class="a-proto">SNIPER</span><div class="a-port">GetBulk // UDP:161</div></div>
+      <div class="amp-tile"><span class="a-n">550x</span><span class="a-proto">MONLIST</span><div class="a-port">monlist // UDP:123</div></div>
+      <div class="amp-tile"><span class="a-n">254x</span><span class="a-proto">SMURF</span><div class="a-port">broadcast ICMP</div></div>
+      <div class="amp-tile"><span class="a-n">254x</span><span class="a-proto">FRAGGLE</span><div class="a-port">UDP echo // :7</div></div>
+      <div class="amp-tile"><span class="a-n">60x</span><span class="a-proto">DNS AMP</span><div class="a-port">ANY/DNSKEY // :53</div></div>
+      <div class="amp-tile"><span class="a-n" style="font-size:48px;color:#d090ff">★</span><span class="a-proto">SPRAY</span><div class="a-port">combined vectors</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2 class="s-title">INSTALL &amp; <span class="am">BUILD</span></h2>
+    <div class="man-grid">
+      <div class="man-card"><span class="man-stamp">01</span><div class="man-title">Quick Install</div><div class="term"><div class="td"># Installs everything automatically</div><div><span class="tp">$ </span><span class="tc">git clone https://github.com/franckferman/Floodles</span></div><div><span class="tp">$ </span><span class="tc">cd Floodles && ./install.sh</span></div><div><span class="tp">$ </span><span class="tc">source ~/.bashrc</span></div><div class="tg">[+] All backends ready.</div></div></div>
+      <div class="man-card"><span class="man-stamp">02</span><div class="man-title">Manual</div><div class="term"><div class="td"># venv + Python dependencies</div><div><span class="tp">$ </span><span class="tc">python3 -m venv .venv && pip install -e .</span></div><div class="td"># Native backends</div><div><span class="tp">$ </span><span class="tc">apt install gcc golang-go</span></div><div><span class="tp">$ </span><span class="tc">curl -sSf https://sh.rustup.rs | sh</span></div><div><span class="tp">$ </span><span class="tc">make</span></div></div></div>
+      <div class="man-card"><span class="man-stamp">03</span><div class="man-title">Validate</div><div class="term"><div><span class="tp">$ </span><span class="tc">floodles detect</span></div><div class="tg">[+] C sender:     libsender.so</div><div class="tg">[+] Rust packets: libfloodles_packets.so</div><div class="tg">[+] Go engine:    floodles-engine</div><div style="color:var(--amber)">[*] All native backends active.</div></div></div>
+      <div class="man-card"><span class="man-stamp">04</span><div class="man-title">DOSArena Lab</div><div class="term"><div class="td"># Isolated lab with scoring engine</div><div class="td"># 15 Docker containers, 8 attack scenarios</div><div class="td"># Live proof-of-impact validation</div><div>&nbsp;</div><div><span class="tp">$ </span><span class="tc">git clone https://github.com/</span></div><div><span class="tc">&nbsp;&nbsp;&nbsp;&nbsp;franckferman/DOSArena</span></div><div><span class="tp">$ </span><span class="tc">cd DOSArena && make up</span></div></div></div>
+      <div class="man-card"><span class="man-stamp">05</span><div class="man-title">Built-in manual</div><div class="term"><div class="td"># List all 19 documented modules</div><div><span class="tp">$ </span><span class="tc">floodles man --list</span></div><div>&nbsp;</div><div class="td"># Full manual for a module</div><div><span class="tp">$ </span><span class="tc">floodles man syn</span></div><div><span class="tp">$ </span><span class="tc">floodles man slow</span></div><div><span class="tp">$ </span><span class="tc">floodles man dns</span></div></div></div>
+      <div class="man-card"><span class="man-stamp">06</span><div class="man-title">Scan &amp; Profile</div><div class="term"><div class="td"># Pre-attack recon: ports, banner, NTP</div><div><span class="tp">$ </span><span class="tc">floodles scan 192.168.1.100 --ntp</span></div><div>&nbsp;</div><div class="td"># YAML attack profile</div><div><span class="tp">$ </span><span class="tc">floodles gen syn_flood test.yaml</span></div><div><span class="tp">$ </span><span class="tc">sudo floodles profile test.yaml</span></div></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="usage">
+  <div class="wrap">
+    <h2 class="s-title">CLI <span class="am">REFERENCE</span></h2>
+    <div class="cli-grid">
+      <div class="cli-pane"><div class="cli-bar"><span class="cb-title">Layer 3/4</span><span class="cb-badge badge-r">ROOT</span></div><div class="term"><div class="td"># SYN flood — 32 threads, 60s</div><div><span class="tp">$ </span><span class="tc">sudo floodles syn 192.168.1.100 80 -t 32 -d 60</span></div><div>&nbsp;</div><div class="td"># UDP — near-MTU, random ports</div><div><span class="tp">$ </span><span class="tc">sudo floodles udp 192.168.1.100 -s 1400 -t 16</span></div><div>&nbsp;</div><div class="td"># XMAS — IDS detection test</div><div><span class="tp">$ </span><span class="tc">sudo floodles xmas 192.168.1.100 80</span></div><div>&nbsp;</div><div class="td"># ACK — stateless firewall test</div><div><span class="tp">$ </span><span class="tc">sudo floodles ack 192.168.1.100 80</span></div><div>&nbsp;</div><div class="td"># Teardrop fragment overlap</div><div><span class="tp">$ </span><span class="tc">sudo floodles overlap 192.168.1.100 --variant teardrop</span></div></div></div>
+      <div class="cli-pane"><div class="cli-bar"><span class="cb-title">Amplification</span><span class="cb-badge badge-r">ROOT</span></div><div class="term"><div class="td"># SNMP GetBulk ~650x</div><div><span class="tp">$ </span><span class="tc">sudo floodles sniper 192.168.1.100 \</span></div><div><span class="tc">&nbsp;&nbsp;&nbsp;-r 10.0.0.1 --community public</span></div><div>&nbsp;</div><div class="td"># NTP monlist ~550x</div><div><span class="tp">$ </span><span class="tc">sudo floodles ntp 192.168.1.100 -r 10.0.0.2</span></div><div>&nbsp;</div><div class="td"># DNS ANY ~60x</div><div><span class="tp">$ </span><span class="tc">sudo floodles dns 192.168.1.100 -r @resolvers.txt</span></div><div>&nbsp;</div><div class="td"># Multi-vector DRDoS</div><div><span class="tp">$ </span><span class="tc">sudo floodles spray 192.168.1.100 \</span></div><div><span class="tc">&nbsp;&nbsp;&nbsp;-c config/examples/spray.yaml</span></div></div></div>
+      <div class="cli-pane"><div class="cli-bar"><span class="cb-title">Layer 7</span><span class="cb-badge badge-g">NO ROOT</span></div><div class="term"><div class="td"># HTTP flood — Go goroutines</div><div><span class="tp">$ </span><span class="tc">floodles http http://192.168.1.100/ -c 1000 -d 60</span></div><div>&nbsp;</div><div class="td"># Slowloris — Apache exhaustion</div><div><span class="tp">$ </span><span class="tc">floodles slow 192.168.1.100 -s 300 -d 120</span></div><div>&nbsp;</div><div class="td"># Slow POST (RUDY)</div><div><span class="tp">$ </span><span class="tc">floodles slowpost 192.168.1.100 -s 150</span></div><div>&nbsp;</div><div class="td"># TCP starvation</div><div><span class="tp">$ </span><span class="tc">floodles nuke 192.168.1.100 --variant window0</span></div></div></div>
+    </div>
+    <div class="cli-pane" style="margin-top:1px"><div class="cli-bar"><span class="cb-title">Manual</span><span class="cb-badge" style="background:var(--dim);color:var(--smoke);border:1px solid var(--dim)">BUILT-IN</span></div><div class="term" style="padding:16px"><div class="td"># List all 19 documented attack modules</div><div><span class="tp">$ </span><span class="tc">floodles man --list</span></div><div>&nbsp;</div><div class="td"># Full manual: mechanism, audit use, indicators, defenses, examples</div><div><span class="tp">$ </span><span class="tc">floodles man syn</span></div><div><span class="tp">$ </span><span class="tc">floodles man slowloris</span></div><div><span class="tp">$ </span><span class="tc">floodles man ntp</span></div><div><span class="tcur"></span></div></div></div>
+  </div>
+</section>
+
+<section id="decision">
+  <div class="wrap">
+    <h2 class="s-title">DECISION <span class="am">GUIDE</span></h2>
+    <div class="dec-layout">
+      <div class="dtree-wrap">
+        <div class="dtree-bar">// floodles scan &lt;target&gt; --ntp</div>
+        <div class="dtree">
+          <div><span class="dr">scan output</span></div>
+          <div><span class="dp">    │</span></div>
+          <div><span class="dp">    ├── </span><span class="dq">Port 80/443 open?</span></div>
+          <div><span class="dp">    │   ├── Apache/IIS  → </span><span class="dm">slowloris</span><span class="dp"> + </span><span class="dm">slow_post</span><span class="dp"> + </span><span class="dm">nuke</span></div>
+          <div><span class="dp">    │   ├── nginx       → </span><span class="dm">http_flood</span> <span class="dn">(event-driven)</span></div>
+          <div><span class="dp">    │   └── WAF/CDN     → </span><span class="dm">http_flood POST</span><span class="dp"> + cache_bust</span></div>
+          <div><span class="dp">    │</span></div>
+          <div><span class="dp">    ├── </span><span class="dq">Any TCP port?</span></div>
+          <div><span class="dp">    │   ├── No SYN cookies → </span><span class="dm">syn_flood</span></div>
+          <div><span class="dp">    │   ├── Firewall       → </span><span class="dm">ack_flood</span> <span class="dn">(stateful?)</span></div>
+          <div><span class="dp">    │   ├── IDS in scope   → </span><span class="dm">xmas_flood</span></div>
+          <div><span class="dp">    │   └── Any TCP        → </span><span class="dm">nuke</span></div>
+          <div><span class="dp">    │</span></div>
+          <div><span class="dp">    ├── </span><span class="dq">Amplifiers in scope?</span></div>
+          <div><span class="dp">    │   ├── SNMP public → </span><span class="dm">sniper</span> <span class="dn">(~650x)</span></div>
+          <div><span class="dp">    │   ├── NTP monlist → </span><span class="dm">ntp_amp</span> <span class="dn">(~550x)</span></div>
+          <div><span class="dp">    │   ├── DNS resolver→ </span><span class="dm">dns_amp</span> <span class="dn">(~60x)</span></div>
+          <div><span class="dp">    │   └── multiple    → </span><span class="dm">spray</span></div>
+          <div><span class="dp">    │</span></div>
+          <div><span class="dp">    └── </span><span class="dq">Legacy / embedded / OT?</span></div>
+          <div><span class="dp">        ├── old kernel  → </span><span class="dm">overlap --variant teardrop</span></div>
+          <div><span class="dp">        └── frag buffer → </span><span class="dm">ip_frag --variant last_only</span></div>
+        </div>
+      </div>
+      <div class="rules">
+        <div class="rule"><div class="rule-m">syn_flood</div><p class="rule-d">First move on any open TCP port. Increase threads progressively to find degradation threshold.</p></div>
+        <div class="rule"><div class="rule-m">sniper</div><p class="rule-d">~650x SNMP GetBulk. Printers, switches, UPS — community "public" still common default.</p></div>
+        <div class="rule"><div class="rule-m">slowloris</div><p class="rule-d">Set sockets to MaxRequestWorkers + 10%. Default Apache = 256. 300 sockets for full exhaustion.</p></div>
+        <div class="rule"><div class="rule-m">spray</div><p class="rule-d">NTP + DNS + SNMP simultaneously. Different source IPs per protocol — no single ACL blocks all.</p></div>
+        <div class="rule"><div class="rule-m">overlap</div><p class="rule-d">Teardrop still crashes VxWorks, QNX, LynxOS and other custom embedded stacks.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="f-block">
+      <div>
+        <div style="font-family:var(--BB);font-size:22px;letter-spacing:4px;color:var(--steam)">FLOODLES</div>
+        <div style="font-family:var(--MN);font-size:11px;color:var(--smoke);letter-spacing:2px;margin-top:4px">v2.0.0 — DoS Testing Toolkit</div>
+      </div>
+    </div>
+    <div class="f-block"><div class="f-ver">Python · C · Rust · Go · 19 modules</div></div>
+    <div class="f-block">
+      <div style="display:flex;gap:24px">
+        <a href="https://github.com/franckferman/Floodles" class="f-link" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/franckferman/DOSArena" class="f-link" target="_blank" rel="noopener">DOSArena</a>
+        <a href="https://github.com/franckferman/Floodles/blob/stable/README.md" class="f-link" target="_blank" rel="noopener">Docs</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const els=document.querySelectorAll('.reveal');
+const io=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}})},{threshold:.1});
+els.forEach(el=>io.observe(el));
+const fills=document.querySelectorAll('.hbar-fill[data-w]');
+const bio=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){setTimeout(()=>{x.target.style.width=x.target.dataset.w},100);bio.unobserve(x.target)}})},{threshold:.3});
+fills.forEach(f=>{f.style.width='0';f.style.transition='width 1.2s cubic-bezier(.16,1,.3,1)';bio.observe(f)});
+const ham=document.getElementById('nav-ham');
+const nav=document.getElementById('nav-links');
+if(ham&&nav){ham.addEventListener('click',()=>{ham.classList.toggle('open');nav.classList.toggle('open')});nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{ham.classList.remove('open');nav.classList.remove('open')}))}
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+module: syn_flood
+target: 192.168.1.100
+meta:
+  name: SYN flood - web server
+  author: redteam
+  description: >
+    Classic TCP SYN flood with IP spoofing.
+    Targets web server port 80.
+    Effective against targets without SYN cookies.
+params:
+  port: 80
+  threads: 32
+  pps_limit: 0
+  duration: 60
+  spoof: true

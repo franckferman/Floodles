@@ -1,0 +1,15 @@
+module: slowloris
+target: 192.168.1.100
+meta:
+  name: Slowloris - Apache exhaustion
+  author: redteam
+  description: >
+    Slow HTTP socket exhaustion targeting Apache.
+    Set socket_count > MaxRequestWorkers (default 256).
+    Use --ssl for HTTPS targets (port 443).
+params:
+  port: 80
+  socket_count: 300
+  keep_alive_interval: 10.0
+  duration: 120
+  use_ssl: false

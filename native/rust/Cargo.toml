@@ -1,0 +1,15 @@
+[package]
+name = "floodles_packets"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "floodles_packets"
+crate-type = ["cdylib"]   # Produces libfloodles_packets.so
+
+[profile.release]
+opt-level = 3
+lto = true            # Link-time optimization -> better inlining across modules
+codegen-units = 1     # Single codegen unit -> better optimization
+panic = "abort"       # No unwinding -> smaller binary, faster
+strip = true          # Strip debug symbols from release
