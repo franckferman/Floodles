@@ -1,0 +1,16 @@
+module: udp_flood
+target: 192.168.1.100
+meta:
+  name: UDP volumetric - near-MTU
+  author: redteam
+  description: >
+    High-rate UDP flood with 1400B payload (near MTU).
+    Randomized destination ports -> ICMP unreachable storm.
+    Spoofed source IPs.
+params:
+  port: 0
+  payload_size: 1400
+  threads: 16
+  pps_limit: 0
+  duration: 60
+  spoof: true

